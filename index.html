@@ -34,7 +34,61 @@
             background-image: radial-gradient(circle, #f0f7ff 10%, #d8e8fc 90%);
         }
 
-        /* En-tête rétro */
+        /* --- ÉCRAN DE CHARGEMENT --- */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #0b192c;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease;
+        }
+
+        #loading-screen img {
+            max-width: 300px;
+            max-height: 300px;
+            object-fit: contain;
+            margin-bottom: 25px;
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        .loader-bar-container {
+            width: 280px;
+            height: 10px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+        }
+
+        .loader-bar {
+            width: 0%;
+            height: 100%;
+            background-color: var(--accent-blue);
+            border-radius: 3px;
+            transition: width 0.1s linear;
+        }
+
+        .loader-text {
+            color: #ffffff;
+            margin-top: 15px;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            100% { transform: scale(1.05); opacity: 1; }
+        }
+
+        /* --- CONTENU PRINCIPAL --- */
         header {
             margin-bottom: 40px;
             text-align: center;
@@ -91,7 +145,6 @@
             transform: scale(0.97);
         }
 
-        /* Icônes symboliques */
         .icon {
             font-size: 3.5rem;
             margin-bottom: 15px;
@@ -103,7 +156,6 @@
             letter-spacing: 1px;
         }
 
-        /* Effet sonore simulé ou indicateur visuel */
         .tile::after {
             content: '';
             position: absolute;
@@ -119,7 +171,6 @@
             background-color: var(--accent-blue);
         }
 
-        /* Pied de page */
         footer {
             position: absolute;
             bottom: 20px;
@@ -127,7 +178,6 @@
             color: #888;
         }
 
-        /* Animations */
         @keyframes fadeInDown {
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -140,6 +190,14 @@
     </style>
 </head>
 <body>
+
+    <div id="loading-screen">
+        <img src="gdloading.png" alt="Chargement SGT490">
+        <div class="loader-bar-container">
+            <div class="loader-bar" id="loader-bar"></div>
+        </div>
+        <div class="loader-text" id="loader-text">Chargement du système... 0%</div>
+    </div>
 
     <header>
         <h1>SGT490</h1>
@@ -163,9 +221,35 @@
     </footer>
 
     <script>
-        // Effet sonore interactif optionnel via l'API Web Audio (effet clic type console)
+        // Gestion de l'écran de chargement de 20 secondes
+        const totalDuration = 20000; // 20 secondes en millisecondes
+        const intervalTime = 100;    // Mise à jour toutes les 100ms
+        let elapsedTime = 0;
+
+        const loaderBar = document.getElementById('loader-bar');
+        const loaderText = document.getElementById('loader-text');
+        const loadingScreen = document.getElementById('loading-screen');
+
+        const loadingInterval = setInterval(() => {
+            elapsedTime += intervalTime;
+            let progress = Math.min(Math.floor((elapsedTime / totalDuration) * 100), 100);
+
+            loaderBar.style.width = progress + '%';
+            loaderText.innerText = `Chargement du système... ${progress}%`;
+
+            if (elapsedTime >= totalDuration) {
+                clearInterval(loadingInterval);
+                // Disparition en fondu de l'écran de chargement
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 800);
+            }
+        }, intervalTime);
+
+        // Effet sonore interactif pour les boutons
         function playSound(event, targetUrl) {
-            event.preventDefault(); // Stoppe la redirection instantanée pour laisser place à l'animation/son
+            event.preventDefault();
 
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -173,8 +257,8 @@
                 const gainNode = audioCtx.createGain();
 
                 oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Note Ré (D5)
-                oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1); // Monte vers La (A5)
+                oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1);
 
                 gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
@@ -185,10 +269,9 @@
                 oscillator.start();
                 oscillator.stop(audioCtx.currentTime + 0.1);
             } catch (e) {
-                // Ignore si l'AudioContext est bloqué par le navigateur avant interaction utilisateur
+                // Ignore si l'AudioContext est bloqué par le navigateur
             }
 
-            // Redirection après un court délai pour apprécier l'effet visuel et sonore
             setTimeout(() => {
                 window.location.href = targetUrl;
             }, 200);
