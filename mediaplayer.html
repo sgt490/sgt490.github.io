@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Media Player</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: monospace;
+      border-radius: 0 !important;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #0d0d0d;
+      color: #cccccc;
+      padding: 15px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background-color: #161616;
+      border: 1px solid #333333;
+      padding: 20px;
+      width: 100%;
+      max-width: 1100px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #333333;
+      padding-bottom: 15px;
+      margin-bottom: 15px;
+    }
+
+    h1 {
+      font-size: 1.2rem;
+      font-weight: normal;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .btn {
+      background-color: #222222;
+      color: #ffffff;
+      border: 1px solid #444444;
+      padding: 12px 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: bold;
+      touch-action: manipulation;
+    }
+
+    .btn:active {
+      background-color: #444444;
+    }
+
+    .display-area {
+      width: 100%;
+      height: 45vh;
+      min-height: 280px;
+      background-color: #000000;
+      border: 1px solid #333333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .placeholder {
+      color: #444444;
+      font-size: 0.9rem;
+    }
+
+    #media-video, #media-image {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: none;
+    }
+
+    .audio-ui {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      padding: 20px;
+    }
+
+    audio, video {
+      width: 100%;
+      outline: none;
+    }
+
+    .panel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .section {
+      background-color: #111111;
+      border: 1px solid #222222;
+      padding: 15px;
+    }
+
+    .section h2 {
+      font-size: 0.85rem;
+      font-weight: normal;
+      color: #888888;
+      border-bottom: 1px solid #222222;
+      padding-bottom: 6px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      font-size: 0.85rem;
+      min-height: 36px;
+    }
+
+    label {
+      color: #aaaaaa;
+    }
+
+    /* Tablet-friendly sliders */
+    input[type="range"] {
+      width: 130px;
+      background: #222222;
+      border: 1px solid #333333;
+      height: 20px;
+      appearance: none;
+      touch-action: manipulation;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 16px;
+      height: 20px;
+      background: #cccccc;
+      cursor: pointer;
+    }
+
+    /* Tablet-friendly inputs & selects */
+    select {
+      background: #222222;
+      color: #cccccc;
+      border: 1px solid #333333;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      height: 36px;
+    }
+
+    input[type="checkbox"] {
+      width: 22px;
+      height: 22px;
+      background: #222222;
+      border: 1px solid #333333;
+      appearance: none;
+      cursor: pointer;
+      position: relative;
+    }
+
+    input[type="checkbox"]:checked {
+      background: #cccccc;
+    }
+
+    .info {
+      font-size: 0.75rem;
+      color: #555555;
+      margin-top: 15px;
+      border-top: 1px solid #222222;
+      padding-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>Media Player</h1>
+      <label for="file-input" class="btn">Select File</label>
+      <input type="file" id="file-input" accept="image/*,video/*,audio/*">
+    </div>
+
+    <div class="display-area">
+      <p id="placeholder" class="placeholder">No file loaded</p>
+      <video id="media-video" controls></video>
+      <img id="media-image" alt="">
+      <div id="audio-ui" class="audio-ui">
+        <audio id="media-audio" controls></audio>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="section">
+        <h2>Speed / Pitch</h2>
+        <div class="row">
+          <label>Speed:</label>
+          <input type="range" id="speed" min="0.1" max="2.0" step="0.05" value="1.0">
+          <span id="speed-val">1.0x</span>
+        </div>
+        <div class="row">
+          <label>Preserve Pitch:</label>
+          <input type="checkbox" id="pitch-preserve" checked>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Audio FX</h2>
+        <div class="row">
+          <label>Gain (+80dB max):</label>
+          <input type="range" id="gain" min="0" max="80" step="1" value="0">
+          <span id="gain-val">0dB</span>
+        </div>
+        <div class="row">
+          <label>Lowpass Cutoff:</label>
+          <input type="range" id="lowpass" min="200" max="20000" step="100" value="20000">
+        </div>
+        <div class="row">
+          <label>Highpass Cutoff:</label>
+          <input type="range" id="highpass" min="20" max="5000" step="50" value="20">
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Visual FX</h2>
+        <div class="row">
+          <label>Upscale FX:</label>
+          <select id="filtty-mode">
+            <option value="none">Off</option>
+            <option value="soft">Filtty Soft</option>
+            <option value="sharp">Filtty Sharp</option>
+            <option value="ultra">Filtty Ultra</option>
+          </select>
+        </div>
+        <div class="row">
+          <label>Invert Colors:</label>
+          <input type="checkbox" id="invert">
+        </div>
+        <div class="row">
+          <label>Grayscale:</label>
+          <input type="range" id="grayscale" min="0" max="100" value="0">
+        </div>
+        <div class="row">
+          <label>Blur:</label>
+          <input type="range" id="blur" min="0" max="10" value="0">
+        </div>
+      </div>
+    </div>
+
+    <div id="file-info" class="info">Ready</div>
+  </div>
+
+  <script>
+    const fileInput = document.getElementById('file-input');
+    const placeholder = document.getElementById('placeholder');
+    const video = document.getElementById('media-video');
+    const image = document.getElementById('media-image');
+    const audio = document.getElementById('media-audio');
+    const audioUI = document.getElementById('audio-ui');
+    const fileInfo = document.getElementById('file-info');
+
+    // Controls
+    const speedInput = document.getElementById('speed');
+    const speedVal = document.getElementById('speed-val');
+    const pitchPreserve = document.getElementById('pitch-preserve');
+    
+    const gainInput = document.getElementById('gain');
+    const gainVal = document.getElementById('gain-val');
+    const lowpassInput = document.getElementById('lowpass');
+    const highpassInput = document.getElementById('highpass');
+
+    const filttyMode = document.getElementById('filtty-mode');
+    const invertInput = document.getElementById('invert');
+    const grayscaleInput = document.getElementById('grayscale');
+    const blurInput = document.getElementById('blur');
+
+    // Web Audio API Setup
+    let audioCtx, sourceNode, gainNode, lowpassNode, highpassNode;
+    let isAudioSetup = false;
+
+    function initAudioContext(element) {
+      if (isAudioSetup) return;
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      
+      sourceNode = audioCtx.createMediaElementSource(element);
+      gainNode = audioCtx.createGain();
+      lowpassNode = audioCtx.createBiquadFilter();
+      highpassNode = audioCtx.createBiquadFilter();
+
+      lowpassNode.type = 'lowpass';
+      lowpassNode.frequency.value = 20000;
+
+      highpassNode.type = 'highpass';
+      highpassNode.frequency.value = 20;
+
+      // Routing: Source -> Lowpass -> Highpass -> Gain -> Destination
+      sourceNode.connect(lowpassNode);
+      lowpassNode.connect(highpassNode);
+      highpassNode.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      isAudioSetup = true;
+    }
+
+    // Load File
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      resetPlayer();
+      const url = URL.createObjectURL(file);
+      fileInfo.textContent = `File: ${file.name}`;
+
+      if (file.type.startsWith('image/')) {
+        image.src = url;
+        image.style.display = 'block';
+      } else if (file.type.startsWith('video/')) {
+        video.src = url;
+        video.style.display = 'block';
+        video.onplay = () => {
+          initAudioContext(video);
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+        };
+      } else if (file.type.startsWith('audio/')) {
+        audio.src = url;
+        audioUI.style.display = 'flex';
+        audio.onplay = () => {
+          initAudioContext(audio);
+          if (audioCtx.state === 'suspended') audioCtx.resume();
+        };
+      }
+    });
+
+    // Speed and Pitch preserving
+    function updateSpeed() {
+      const rate = parseFloat(speedInput.value);
+      speedVal.textContent = rate.toFixed(2) + 'x';
+
+      video.playbackRate = rate;
+      audio.playbackRate = rate;
+
+      const preserve = pitchPreserve.checked;
+      video.preservesPitch = preserve;
+      audio.preservesPitch = preserve;
+      video.webkitPreservesPitch = preserve;
+      audio.webkitPreservesPitch = preserve;
+    }
+
+    speedInput.addEventListener('input', updateSpeed);
+    pitchPreserve.addEventListener('change', updateSpeed);
+
+    // Audio Gain (+80dB)
+    gainInput.addEventListener('input', () => {
+      const db = parseFloat(gainInput.value);
+      gainVal.textContent = `+${db}dB`;
+      if (gainNode) {
+        gainNode.gain.value = Math.pow(10, db / 20);
+      }
+    });
+
+    // Audio Filters
+    lowpassInput.addEventListener('input', () => {
+      if (lowpassNode) lowpassNode.frequency.value = lowpassInput.value;
+    });
+
+    highpassInput.addEventListener('input', () => {
+      if (highpassNode) highpassNode.frequency.value = highpassInput.value;
+    });
+
+    // Visual Filters & Filttys
+    function updateVisualFilters() {
+      let filterStr = `grayscale(${grayscaleInput.value}%) blur(${blurInput.value}px)`;
+      if (invertInput.checked) filterStr += ' invert(100%)';
+
+      switch (filttyMode.value) {
+        case 'soft':
+          filterStr += ' contrast(115%) brightness(105%)';
+          break;
+        case 'sharp':
+          filterStr += ' contrast(135%) saturate(110%)';
+          break;
+        case 'ultra':
+          filterStr += ' contrast(160%) brightness(110%) saturate(120%)';
+          break;
+      }
+
+      video.style.filter = filterStr;
+      image.style.filter = filterStr;
+    }
+
+    filttyMode.addEventListener('change', updateVisualFilters);
+    invertInput.addEventListener('change', updateVisualFilters);
+    grayscaleInput.addEventListener('input', updateVisualFilters);
+    blurInput.addEventListener('input', updateVisualFilters);
+
+    function resetPlayer() {
+      placeholder.style.display = 'none';
+      video.pause();
+      video.style.display = 'none';
+      video.removeAttribute('src');
+
+      image.style.display = 'none';
+      image.removeAttribute('src');
+
+      audio.pause();
+      audioUI.style.display = 'none';
+      audio.removeAttribute('src');
+    }
+  </script>
+
+</body>
+</html>

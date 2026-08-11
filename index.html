@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGT490 - Canal de Redirection</title>
+    <style>
+        /* Style inspiré de l'interface Wii U / Menu Wii */
+        :root {
+            --bg-color: #e6f0fa;
+            --tile-bg: #ffffff;
+            --tile-hover: #d0e4f9;
+            --text-color: #333333;
+            --accent-blue: #009ac7;
+            --shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            background-image: radial-gradient(circle, #f0f7ff 10%, #d8e8fc 90%);
+        }
+
+        /* En-tête rétro */
+        header {
+            margin-bottom: 40px;
+            text-align: center;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            color: var(--accent-blue);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 2px 2px 0px rgba(255, 255, 255, 0.8);
+        }
+
+        p.subtitle {
+            font-size: 1.1rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* Grille des icônes style Wii U */
+        .grid-container {
+            display: flex;
+            gap: 40px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        .tile {
+            width: 220px;
+            height: 220px;
+            background-color: var(--tile-bg);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-color);
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 4px solid #ffffff;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .tile:hover {
+            transform: translateY(-10px) scale(1.03);
+            background-color: var(--tile-hover);
+            border-color: var(--accent-blue);
+            box-shadow: 0 14px 24px rgba(0, 154, 199, 0.2);
+        }
+
+        .tile:active {
+            transform: scale(0.97);
+        }
+
+        /* Icônes symboliques */
+        .icon {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+        }
+
+        .tile span {
+            font-size: 1.2rem;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        /* Effet sonore simulé ou indicateur visuel */
+        .tile::after {
+            content: '';
+            position: absolute;
+            bottom: 15px;
+            width: 8px;
+            height: 8px;
+            background-color: transparent;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+
+        .tile:hover::after {
+            background-color: var(--accent-blue);
+        }
+
+        /* Pied de page */
+        footer {
+            position: absolute;
+            bottom: 20px;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>SGT490</h1>
+        <p class="subtitle">Sélectionnez une application</p>
+    </header>
+
+    <div class="grid-container">
+        <a href="dashboard.html" class="tile" onclick="playSound(event, 'dashboard.html')">
+            <div class="icon">📊</div>
+            <span>Dashboard</span>
+        </a>
+
+        <a href="mediaplayer.html" class="tile" onclick="playSound(event, 'mediaplayer.html')">
+            <div class="icon">🎬</div>
+            <span>Media Player</span>
+        </a>
+    </div>
+
+    <footer>
+        SGT490 System Menu &bull; Version Rétro
+    </footer>
+
+    <script>
+        // Effet sonore interactif optionnel via l'API Web Audio (effet clic type console)
+        function playSound(event, targetUrl) {
+            event.preventDefault(); // Stoppe la redirection instantanée pour laisser place à l'animation/son
+
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(587.33, audioCtx.currentTime); // Note Ré (D5)
+                oscillator.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1); // Monte vers La (A5)
+
+                gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.1);
+            } catch (e) {
+                // Ignore si l'AudioContext est bloqué par le navigateur avant interaction utilisateur
+            }
+
+            // Redirection après un court délai pour apprécier l'effet visuel et sonore
+            setTimeout(() => {
+                window.location.href = targetUrl;
+            }, 200);
+        }
+    </script>
+
+</body>
+</html>
